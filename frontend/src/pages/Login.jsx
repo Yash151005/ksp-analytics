@@ -81,7 +81,7 @@ export const LoginPage = () => {
         {/* Footer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
           <p>Secure. Encrypted. Confidential.</p>
-          <p className="mt-2">© 2024 Karnataka State Police. All rights reserved.</p>
+          <p className="mt-2">© 2026 Karnataka State Police. All rights reserved.</p>
         </div>
       </div>
     </div>

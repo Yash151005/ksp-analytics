@@ -121,7 +121,7 @@ def get_random_coordinates(district_name):
 
 def generate_crime_id():
     """Generate KSP-format crime ID"""
-    year = random.randint(2022, 2024)
+    year = random.randint(2022, 2026)
     sequence = random.randint(1000, 9999)
     return f"KSP-{year}-{sequence:05d}"
 

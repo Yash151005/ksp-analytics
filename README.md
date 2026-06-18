@@ -590,12 +590,12 @@ For issues, questions, or feature requests:
 
 ## 📄 License
 
-© 2024 Karnataka State Police. All rights reserved.
+© 2026 Karnataka State Police. All rights reserved.
 
 Confidential. For authorized KSP personnel only.
 
 ---
 
 **Version**: 1.0.0  
-**Last Updated**: 2024  
+**Last Updated**: 2026  
 **Status**: Production Ready
