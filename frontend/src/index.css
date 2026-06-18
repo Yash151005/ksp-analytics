@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: #0A1628;
+  color: #ffffff;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A1628;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E3A5F;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2D5A8C;
+}
+
+/* Button Reset */
+button {
+  transition: all 0.2s ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Input Styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="range"],
+textarea,
+select {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+/* Focus Styles */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Typewriter Effect */
+.typewriter {
+  overflow: hidden;
+  border-right: 3px solid #F59E0B;
+  white-space: pre-wrap;
+  animation: blink 0.7s infinite;
+}
+
+@keyframes blink {
+  0%, 49% {
+    border-right-color: #F59E0B;
+  }
+  50%, 100% {
+    border-right-color: transparent;
+  }
+}
+
+/* Severity Colors */
+.severity-critical {
+  @apply bg-alert-red/10 border-l-4 border-alert-red;
+}
+
+.severity-high {
+  @apply bg-amber/10 border-l-4 border-amber;
+}
+
+.severity-medium {
+  @apply bg-blue-500/10 border-l-4 border-blue-500;
+}
+
+.severity-low {
+  @apply bg-safe-green/10 border-l-4 border-safe-green;
+}
+
+/* Badge Styles */
+.badge {
+  @apply inline-block px-3 py-1 rounded-full text-xs font-bold;
+}
+
+.badge-success {
+  @apply bg-safe-green/20 text-safe-green border border-safe-green;
+}
+
+.badge-danger {
+  @apply bg-alert-red/20 text-alert-red border border-alert-red;
+}
+
+.badge-warning {
+  @apply bg-amber/20 text-amber border border-amber;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-steel-blue rounded-lg p-6 border border-gray-700;
+}
+
+.card-hover {
+  @apply card hover:border-gray-600 hover:shadow-lg transition;
+}
