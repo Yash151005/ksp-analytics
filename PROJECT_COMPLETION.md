@@ -373,7 +373,7 @@ The project is **production-ready** with:
 - **Total Files**: 39 (18 backend + 18 frontend + 3 config)
 - **Lines of Code**: 3,500+
 - **Technologies**: FastAPI, React, SQLAlchemy, D3.js, Leaflet, Ollama
-- **Database**: SQLite (production: PostgreSQL)
+- **Database**: MongoDB (Local or Atlas)
 - **Authentication**: JWT with role-based access
 - **Deployment**: Docker-ready, scalable architecture
 
