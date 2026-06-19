@@ -21,6 +21,15 @@ export const Admin = () => {
     role: 'viewer',
   });
 
+  const [showEditUserForm, setShowEditUserForm] = useState(false);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editUserForm, setEditUserForm] = useState({
+    email: '',
+    full_name: '',
+    role: 'viewer',
+    is_active: true,
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -59,6 +68,17 @@ export const Admin = () => {
       setShowNewUserForm(false);
     } catch (err) {
       alert('Failed to create user: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const handleUpdateUser = async () => {
+    try {
+      const response = await adminAPI.updateUser(editingUserId, editUserForm);
+      setUsers(users.map(u => u.id === editingUserId ? response.data : u));
+      setShowEditUserForm(false);
+      setEditingUserId(null);
+    } catch (err) {
+      alert('Failed to update user: ' + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -187,6 +207,64 @@ export const Admin = () => {
             </div>
           )}
 
+          {showEditUserForm && (
+            <div className="bg-steel-blue rounded-lg p-6">
+              <h3 className="text-lg font-bold text-white mb-4">Edit User</h3>
+              <div className="space-y-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={editUserForm.email}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
+                  className="w-full bg-navy text-white px-3 py-2 rounded border border-gray-600"
+                />
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={editUserForm.full_name}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, full_name: e.target.value })}
+                  className="w-full bg-navy text-white px-3 py-2 rounded border border-gray-600"
+                />
+                <select
+                  value={editUserForm.role}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, role: e.target.value })}
+                  className="w-full bg-navy text-white px-3 py-2 rounded border border-gray-600"
+                >
+                  <option value="viewer">Viewer</option>
+                  <option value="investigator">Investigator</option>
+                  <option value="analyst">Analyst</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={editUserForm.is_active}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, is_active: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <label className="text-white">Active User</label>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleUpdateUser}
+                    className="w-full bg-blue-500 hover:bg-opacity-80 transition text-white font-bold py-2 px-4 rounded"
+                  >
+                    ✓ Save Changes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowEditUserForm(false);
+                      setEditingUserId(null);
+                    }}
+                    className="w-full bg-gray-600 hover:bg-opacity-80 transition text-white font-bold py-2 px-4 rounded"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-steel-blue rounded-lg overflow-x-auto">
             <table className="w-full text-sm text-gray-300">
               <thead className="bg-navy border-b border-gray-600">
@@ -217,7 +295,23 @@ export const Admin = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs">{new Date(user.created_at).toLocaleDateString()}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingUserId(user.id);
+                          setEditUserForm({
+                            email: user.email || '',
+                            full_name: user.full_name || '',
+                            role: user.role || 'viewer',
+                            is_active: user.is_active,
+                          });
+                          setShowEditUserForm(true);
+                          setShowNewUserForm(false);
+                        }}
+                        className="bg-blue-500 hover:bg-opacity-80 transition text-white px-3 py-1 rounded text-xs font-semibold"
+                      >
+                        Edit
+                      </button>
                       <button
                         onClick={() => {
                           setSelectedUserId(user.id);
@@ -225,7 +319,7 @@ export const Admin = () => {
                         }}
                         className="bg-alert-red hover:bg-opacity-80 transition text-white px-3 py-1 rounded text-xs font-semibold"
                       >
-                        Deactivate
+                        Delete
                       </button>
                     </td>
                   </tr>
@@ -266,7 +360,7 @@ export const Admin = () => {
 
       {showConfirm && (
         <ConfirmDialog
-          title="Deactivate User"
+          title="Delete User"
           message="Are you sure? This user will no longer be able to log in."
           onConfirm={() => handleDeleteUser(selectedUserId)}
           onCancel={() => setShowConfirm(false)}
