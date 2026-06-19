@@ -24,6 +24,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
+    password: Optional[str] = None
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -211,6 +212,8 @@ def update_user(
         update_dict["role"] = user_data.role
     if user_data.is_active is not None:
         update_dict["is_active"] = user_data.is_active
+    if user_data.password:
+        update_dict["hashed_password"] = pwd_context.hash(user_data.password)
     
     db.users.update_one({"_id": obj_id}, {"$set": update_dict})
     
@@ -227,22 +230,19 @@ def update_user(
 
 
 @router.delete("/users/{user_id}")
-def deactivate_user(user_id: str, db: Database = Depends(get_db)):
-    """Deactivate a user (soft delete)"""
+def delete_user(user_id: str, db: Database = Depends(get_db)):
+    """Delete a user permanently"""
     try:
         obj_id = ObjectId(user_id)
     except:
         raise HTTPException(status_code=400, detail="Invalid user ID format")
         
-    result = db.users.update_one(
-        {"_id": obj_id},
-        {"$set": {"is_active": False, "updated_at": datetime.now(UTC)}}
-    )
+    result = db.users.delete_one({"_id": obj_id})
     
-    if result.matched_count == 0:
+    if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     
-    return {"message": "User deactivated", "user_id": user_id}
+    return {"message": "User deleted", "user_id": user_id}
 
 
 @router.get("/permissions")

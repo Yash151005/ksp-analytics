@@ -28,6 +28,7 @@ export const Admin = () => {
     full_name: '',
     role: 'viewer',
     is_active: true,
+    password: '',
   });
 
   useEffect(() => {
@@ -73,7 +74,11 @@ export const Admin = () => {
 
   const handleUpdateUser = async () => {
     try {
-      const response = await adminAPI.updateUser(editingUserId, editUserForm);
+      const updateData = { ...editUserForm };
+      if (!updateData.password) {
+        delete updateData.password;
+      }
+      const response = await adminAPI.updateUser(editingUserId, updateData);
       setUsers(users.map(u => u.id === editingUserId ? response.data : u));
       setShowEditUserForm(false);
       setEditingUserId(null);
@@ -225,6 +230,13 @@ export const Admin = () => {
                   onChange={(e) => setEditUserForm({ ...editUserForm, full_name: e.target.value })}
                   className="w-full bg-navy text-white px-3 py-2 rounded border border-gray-600"
                 />
+                <input
+                  type="password"
+                  placeholder="New Password (leave blank to keep current)"
+                  value={editUserForm.password}
+                  onChange={(e) => setEditUserForm({ ...editUserForm, password: e.target.value })}
+                  className="w-full bg-navy text-white px-3 py-2 rounded border border-gray-600"
+                />
                 <select
                   value={editUserForm.role}
                   onChange={(e) => setEditUserForm({ ...editUserForm, role: e.target.value })}
@@ -304,6 +316,7 @@ export const Admin = () => {
                             full_name: user.full_name || '',
                             role: user.role || 'viewer',
                             is_active: user.is_active,
+                            password: '',
                           });
                           setShowEditUserForm(true);
                           setShowNewUserForm(false);
