@@ -74,8 +74,17 @@ export const LoginPage = () => {
               {isLoading ? 'Logging in...' : 'Sign In'}
             </button>
           </form>
+        </div>
 
-
+        {/* Demo Credentials */}
+        <div className="mt-6 bg-steel-blue/50 rounded-lg p-4 border border-gray-600 text-sm">
+          <p className="text-gray-300 font-semibold mb-2">Demo Credentials for Evaluators:</p>
+          <div className="grid grid-cols-2 gap-2 text-gray-400">
+            <div><span className="text-amber">Admin:</span> admin / admin123</div>
+            <div><span className="text-amber">Analyst:</span> analyst / analyst123</div>
+            <div><span className="text-amber">Investigator:</span> investigator / inv123</div>
+            <div><span className="text-amber">Viewer:</span> viewer / viewer123</div>
+          </div>
         </div>
 
         {/* Footer */}
