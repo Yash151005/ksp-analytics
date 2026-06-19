@@ -68,7 +68,7 @@ class LoginRequest(BaseModel):
 @app.post("/api/auth/login")
 def login(login_data: LoginRequest, db: Database = Depends(get_db)):
     """User login endpoint"""
-    user_data = db.users.find_one({"username": login_data.username})
+    user_data = db.users.find_one({"$or": [{"username": login_data.username}, {"email": login_data.username}]})
     
     if not user_data or not pwd_context.verify(login_data.password, user_data.get("hashed_password")):
         raise HTTPException(status_code=401, detail="Invalid credentials")

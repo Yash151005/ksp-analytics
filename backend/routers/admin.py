@@ -10,6 +10,20 @@ from typing import Optional
 from database import get_db
 from models import serialize_docs, serialize_doc
 from passlib.context import CryptContext
+from pydantic import BaseModel
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    full_name: str
+    role: str = "viewer"
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -107,31 +121,27 @@ def list_users(
 
 @router.post("/users")
 def create_user(
-    username: str,
-    email: str,
-    password: str,
-    full_name: str,
-    role: str = "viewer",
+    user_data: UserCreate,
     db: Database = Depends(get_db),
 ):
     """Create a new user"""
     # Check if user already exists
-    existing_user = db.users.find_one({"$or": [{"username": username}, {"email": email}]})
+    existing_user = db.users.find_one({"$or": [{"username": user_data.username}, {"email": user_data.email}]})
     
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
     
     # Validate role
-    if role not in ROLE_PERMISSIONS:
-        raise HTTPException(status_code=400, detail=f"Invalid role: {role}")
+    if user_data.role not in ROLE_PERMISSIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid role: {user_data.role}")
     
     now = datetime.now(UTC)
     user_doc = {
-        "username": username,
-        "email": email,
-        "hashed_password": pwd_context.hash(password),
-        "full_name": full_name,
-        "role": role,
+        "username": user_data.username,
+        "email": user_data.email,
+        "hashed_password": pwd_context.hash(user_data.password),
+        "full_name": user_data.full_name,
+        "role": user_data.role,
         "is_active": True,
         "created_at": now,
         "updated_at": now,
@@ -141,10 +151,10 @@ def create_user(
     
     return {
         "id": str(result.inserted_id),
-        "username": username,
-        "email": email,
-        "full_name": full_name,
-        "role": role,
+        "username": user_data.username,
+        "email": user_data.email,
+        "full_name": user_data.full_name,
+        "role": user_data.role,
         "is_active": True,
         "created_at": now.isoformat(),
     }
@@ -176,10 +186,7 @@ def get_user(user_id: str, db: Database = Depends(get_db)):
 @router.put("/users/{user_id}")
 def update_user(
     user_id: str,
-    email: Optional[str] = None,
-    full_name: Optional[str] = None,
-    role: Optional[str] = None,
-    is_active: Optional[bool] = None,
+    user_data: UserUpdate,
     db: Database = Depends(get_db),
 ):
     """Update user details"""
@@ -192,20 +199,20 @@ def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    update_data = {"updated_at": datetime.now(UTC)}
+    update_dict = {"updated_at": datetime.now(UTC)}
     
-    if email:
-        update_data["email"] = email
-    if full_name:
-        update_data["full_name"] = full_name
-    if role:
-        if role not in ROLE_PERMISSIONS:
-            raise HTTPException(status_code=400, detail=f"Invalid role: {role}")
-        update_data["role"] = role
-    if is_active is not None:
-        update_data["is_active"] = is_active
+    if user_data.email:
+        update_dict["email"] = user_data.email
+    if user_data.full_name:
+        update_dict["full_name"] = user_data.full_name
+    if user_data.role:
+        if user_data.role not in ROLE_PERMISSIONS:
+            raise HTTPException(status_code=400, detail=f"Invalid role: {user_data.role}")
+        update_dict["role"] = user_data.role
+    if user_data.is_active is not None:
+        update_dict["is_active"] = user_data.is_active
     
-    db.users.update_one({"_id": obj_id}, {"$set": update_data})
+    db.users.update_one({"_id": obj_id}, {"$set": update_dict})
     
     updated_user = db.users.find_one({"_id": obj_id})
     result = serialize_doc(updated_user)
