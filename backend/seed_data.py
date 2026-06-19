@@ -163,17 +163,7 @@ def create_default_users():
             "is_active": True,
             "created_at": now,
             "updated_at": now
-        },
-        {
-            "username": "viewer",
-            "email": "viewer@ksp.gov.in",
-            "hashed_password": pwd_context.hash("view123"),
-            "full_name": "Data Viewer",
-            "role": "viewer",
-            "is_active": True,
-            "created_at": now,
-            "updated_at": now
-        },
+        }
     ]
     db.users.insert_many(users)
     return users
