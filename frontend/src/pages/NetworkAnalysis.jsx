@@ -144,6 +144,9 @@ export const NetworkAnalysis = () => {
       .append('circle')
       .attr('r', d => nodeRadius(d))
       .attr('fill', d => {
+        if (d.type === 'vehicle') return '#3B82F6'; // Blue
+        if (d.type === 'bank') return '#8B5CF6'; // Purple
+        // Criminal logic
         if (d.risk_score >= 70) return '#DC2626';
         if (d.risk_score >= 40) return '#F59E0B';
         return '#16A34A';
@@ -160,7 +163,11 @@ export const NetworkAnalysis = () => {
       });
 
     node.append('title')
-      .text(d => `${d.name} (Risk: ${d.risk_score})`);
+      .text(d => {
+        if (d.type === 'vehicle') return `Vehicle: ${d.name}`;
+        if (d.type === 'bank') return `Bank: ${d.name}`;
+        return `${d.name} (Risk: ${d.risk_score})`;
+      });
 
     // Add labels
     const labels = svg.append('g')
@@ -172,7 +179,11 @@ export const NetworkAnalysis = () => {
       .attr('fill', '#fff')
       .attr('text-anchor', 'middle')
       .style('pointer-events', 'none')
-      .text(d => d.alias.substring(0, 6));
+      .text(d => {
+        if (d.type === 'vehicle') return d.name.substring(0, 7);
+        if (d.type === 'bank') return d.name.substring(0, 6);
+        return (d.alias || d.name).substring(0, 6);
+      });
 
     const updatePositions = () => {
       networkData.nodes.forEach(constrainNode);
@@ -291,32 +302,78 @@ export const NetworkAnalysis = () => {
         <div className="bg-steel-blue rounded-lg p-6 text-white overflow-y-auto" style={{ height: '600px' }}>
           {selectedNode ? (
             <div>
-              <h3 className="text-lg font-bold mb-4">{selectedNode.name}</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <span className={`text-2xl ${
+                  selectedNode.type === 'vehicle' ? 'text-blue-500' :
+                  selectedNode.type === 'bank' ? 'text-purple-500' :
+                  'text-red-500'
+                }`}>
+                  {selectedNode.type === 'vehicle' ? '🚗' : selectedNode.type === 'bank' ? '🏦' : '👤'}
+                </span>
+                <h3 className="text-lg font-bold">{selectedNode.name}</h3>
+              </div>
               
               <div className="space-y-4">
-                <div>
-                  <p className="text-gray-400 text-sm">Alias</p>
-                  <p className="font-mono">{selectedNode.alias}</p>
-                </div>
+                {(!selectedNode.type || selectedNode.type === 'criminal') && (
+                  <>
+                    <div>
+                      <p className="text-gray-400 text-sm">Alias</p>
+                      <p className="font-mono">{selectedNode.alias}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Risk Score</p>
+                      <RiskScoreBadge score={selectedNode.risk_score} size="lg" />
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Status</p>
+                      <p className="font-semibold capitalize">{selectedNode.status}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Crime Count</p>
+                      <p className="text-2xl font-bold text-amber">{selectedNode.crime_count}</p>
+                    </div>
+                  </>
+                )}
 
-                <div>
-                  <p className="text-gray-400 text-sm">Risk Score</p>
-                  <RiskScoreBadge score={selectedNode.risk_score} size="lg" />
-                </div>
+                {selectedNode.type === 'vehicle' && (
+                  <>
+                    <div>
+                      <p className="text-gray-400 text-sm">Make & Model</p>
+                      <p className="font-semibold">{selectedNode.make_model}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">License Plate</p>
+                      <p className="font-mono bg-amber/20 text-amber px-2 py-1 rounded inline-block mt-1">
+                        {selectedNode.name}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Color</p>
+                      <p className="font-semibold">{selectedNode.color}</p>
+                    </div>
+                  </>
+                )}
 
-                <div>
-                  <p className="text-gray-400 text-sm">Status</p>
-                  <p className="font-semibold capitalize">{selectedNode.status}</p>
-                </div>
+                {selectedNode.type === 'bank' && (
+                  <>
+                    <div>
+                      <p className="text-gray-400 text-sm">Bank Name</p>
+                      <p className="font-semibold">{selectedNode.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Account Number</p>
+                      <p className="font-mono">{selectedNode.account_number}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Account Balance</p>
+                      <p className="text-2xl font-bold text-safe-green">₹{selectedNode.balance?.toLocaleString()}</p>
+                    </div>
+                  </>
+                )}
 
-                <div>
-                  <p className="text-gray-400 text-sm">Crime Count</p>
-                  <p className="text-2xl font-bold text-amber">{selectedNode.crime_count}</p>
-                </div>
-
-                <div>
+                <div className="pt-4 border-t border-gray-700">
                   <p className="text-gray-400 text-sm">Network Connections</p>
-                  <p className="text-2xl font-bold text-safe-green">
+                  <p className="text-2xl font-bold text-gray-200">
                     {networkData.links.filter(l => l.source.id === selectedNode.id || l.target.id === selectedNode.id).length}
                   </p>
                 </div>

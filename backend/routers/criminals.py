@@ -165,7 +165,7 @@ def get_associates(criminal_id: str, db: Database = Depends(get_db)):
 def get_network(db: Database = Depends(get_db)):
     """
     Get network graph data for D3.js visualization
-    Returns nodes and links for criminal association network
+    Returns nodes and links for criminal association network, including vehicles and bank accounts
     """
     criminals = list(db.criminals.find({"risk_score": {"$gte": 20}}).limit(100))
     
@@ -174,11 +174,17 @@ def get_network(db: Database = Depends(get_db)):
     processed_associations = set()
     
     criminal_dict = {str(c["_id"]): c for c in criminals}
+    criminal_ids = list(criminal_dict.keys())
+    
+    # Fetch associated vehicles and bank accounts
+    vehicles = list(db.vehicles.find({"criminal_id": {"$in": criminal_ids}}))
+    bank_accounts = list(db.bank_accounts.find({"criminal_id": {"$in": criminal_ids}}))
     
     for c in criminals:
         c_id = str(c["_id"])
         nodes.append({
             "id": c_id,
+            "type": "criminal",
             "name": c.get("name"),
             "alias": c.get("alias"),
             "risk_score": c.get("risk_score"),
@@ -195,7 +201,44 @@ def get_network(db: Database = Depends(get_db)):
                         "source": c_id,
                         "target": a_id,
                         "strength": min(10, len(c.get("crime_history", []))) / 10,
+                        "type": "association"
                     })
+                    
+    for v in vehicles:
+        v_id = str(v["_id"])
+        c_id = v["criminal_id"]
+        nodes.append({
+            "id": v_id,
+            "type": "vehicle",
+            "name": v.get("license_plate"),
+            "make_model": v.get("make_model"),
+            "color": v.get("color"),
+            "risk_score": 10, # default visual size
+        })
+        links.append({
+            "source": c_id,
+            "target": v_id,
+            "strength": 0.5,
+            "type": "ownership"
+        })
+        
+    for b in bank_accounts:
+        b_id = str(b["_id"])
+        c_id = b["criminal_id"]
+        nodes.append({
+            "id": b_id,
+            "type": "bank",
+            "name": b.get("bank_name"),
+            "account_number": b.get("account_number"),
+            "balance": b.get("balance"),
+            "risk_score": 10, # default visual size
+        })
+        links.append({
+            "source": c_id,
+            "target": b_id,
+            "strength": 0.5,
+            "type": "ownership"
+        })
     
     return {
         "nodes": nodes,

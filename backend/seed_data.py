@@ -108,6 +108,10 @@ WEATHER_CONDITIONS = ["clear", "rainy", "cloudy", "foggy", "stormy"]
 TIMES_OF_DAY = ["morning", "afternoon", "evening", "night"]
 DAYS_OF_WEEK = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
+VEHICLE_MAKES = ["Toyota Innova", "Mahindra Scorpio", "Maruti Swift", "Hyundai Creta", "Honda City", "Tata Nexon"]
+VEHICLE_COLORS = ["White", "Black", "Silver", "Red", "Grey"]
+BANK_NAMES = ["State Bank of India", "HDFC Bank", "ICICI Bank", "Axis Bank", "Kotak Mahindra Bank", "Bank of Baroda"]
+
 
 def get_random_coordinates(district_name):
     """Get realistic coordinates within a district"""
@@ -367,6 +371,42 @@ def create_audit_logs(count=50):
     return logs
 
 
+def create_vehicles(criminals, count=80):
+    """Generate vehicle records"""
+    vehicles = []
+    now = datetime.now(UTC)
+    for _ in range(count):
+        criminal = random.choice(criminals)
+        vehicles.append({
+            "license_plate": f"KA-{random.randint(1, 60):02d}-{random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}{random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}-{random.randint(1000, 9999)}",
+            "make_model": random.choice(VEHICLE_MAKES),
+            "color": random.choice(VEHICLE_COLORS),
+            "criminal_id": str(criminal["_id"]),
+            "created_at": now
+        })
+    if vehicles:
+        db.vehicles.insert_many(vehicles)
+    return vehicles
+
+
+def create_bank_accounts(criminals, count=60):
+    """Generate bank account records"""
+    accounts = []
+    now = datetime.now(UTC)
+    for _ in range(count):
+        criminal = random.choice(criminals)
+        accounts.append({
+            "account_number": f"{random.randint(1000000000, 9999999999)}",
+            "bank_name": random.choice(BANK_NAMES),
+            "balance": round(random.uniform(1000.0, 500000.0), 2),
+            "criminal_id": str(criminal["_id"]),
+            "created_at": now
+        })
+    if accounts:
+        db.bank_accounts.insert_many(accounts)
+    return accounts
+
+
 def seed_database():
     """Main function to populate database with seed data"""
     print("🌱 Starting MongoDB database seeding...")
@@ -380,6 +420,8 @@ def seed_database():
     db.reports.drop()
     db.audit_logs.drop()
     db.ollama_audit_logs.drop()
+    db.vehicles.drop()
+    db.bank_accounts.drop()
     
     # Initialize indexes
     print("📋 Creating indexes...")
@@ -415,6 +457,15 @@ def seed_database():
         print("📋 Creating dummy audit logs...")
         logs = create_audit_logs(count=50)
         print(f"✓ Created {len(logs)} audit log records")
+        
+        # Create vehicles and bank accounts
+        print("🚗 Creating vehicle records...")
+        vehicles = create_vehicles(criminals, count=80)
+        print(f"✓ Created {len(vehicles)} vehicle records")
+        
+        print("🏦 Creating bank account records...")
+        bank_accounts = create_bank_accounts(criminals, count=60)
+        print(f"✓ Created {len(bank_accounts)} bank account records")
         
         # Update criminal records with crime history
         print("📊 Linking criminals to crimes...")
@@ -456,6 +507,8 @@ def seed_database():
         print(f"  - {len(alerts)} alerts")
         print(f"  - {len(reports)} reports")
         print(f"  - {len(logs)} audit logs")
+        print(f"  - {len(vehicles)} vehicles")
+        print(f"  - {len(bank_accounts)} bank accounts")
         
     except Exception as e:
         print(f"❌ Error during seeding: {e}")

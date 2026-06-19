@@ -70,6 +70,20 @@ class Criminal(MongoBaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
+class Vehicle(MongoBaseModel):
+    license_plate: str
+    make_model: str
+    color: str
+    criminal_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+class BankAccount(MongoBaseModel):
+    account_number: str
+    bank_name: str
+    balance: float
+    criminal_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
 class Alert(MongoBaseModel):
     title: str
     description: str
