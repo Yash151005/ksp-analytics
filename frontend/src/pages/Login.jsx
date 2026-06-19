@@ -83,7 +83,6 @@ export const LoginPage = () => {
             <div><span className="text-amber">Admin:</span> admin / admin123</div>
             <div><span className="text-amber">Analyst:</span> analyst / analyst123</div>
             <div><span className="text-amber">Investigator:</span> investigator / inv123</div>
-            <div><span className="text-amber">Viewer:</span> viewer / viewer123</div>
           </div>
         </div>
 
