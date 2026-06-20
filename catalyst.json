@@ -1,14 +1,11 @@
 {
+  "client": {
+    "source": "frontend/dist"
+  },
   "appsail": [
     {
       "source": "backend",
-      "name": "ksp-analytics-api"
-    }
-  ],
-  "slate": [
-    {
-      "name": "ksp-analytics-web",
-      "source": "D:\\project\\ksp-analytics\\frontend"
+      "name": "ksp-backend"
     }
   ]
 }

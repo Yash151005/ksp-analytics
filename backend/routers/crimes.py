@@ -5,7 +5,7 @@ Handles all crime-related endpoints
 from fastapi import APIRouter, Depends, Query, HTTPException
 from pymongo.database import Database
 from bson.objectid import ObjectId
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from database import get_db
 from models import serialize_docs, serialize_doc
@@ -114,7 +114,7 @@ def get_by_district(days: int = Query(30, ge=1, le=365), db: Database = Depends(
 @router.get("/stats/by-type")
 def get_by_type(days: int = Query(30, ge=1, le=365), db: Database = Depends(get_db)):
     """Get crime statistics by type using MongoDB Aggregation"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     pipeline = [
         {"$match": {"date": {"$gte": cutoff_date}}},
@@ -157,6 +157,6 @@ def export_csv(
     csv_data = export_crimes_to_csv(crimes)
     
     return {
-        "filename": f"crimes_export_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.csv",
+        "filename": f"crimes_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv",
         "data": csv_data,
     }

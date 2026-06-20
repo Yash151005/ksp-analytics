@@ -9,7 +9,7 @@ from typing import List, Optional
 from database import get_db
 from models import serialize_docs, serialize_doc
 from services.export_service import export_criminals_to_csv
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 import re
 
 router = APIRouter(prefix="/api/criminals", tags=["criminals"])
@@ -291,6 +291,6 @@ def export_csv(
     csv_data = export_criminals_to_csv(criminals)
     
     return {
-        "filename": f"criminals_export_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.csv",
+        "filename": f"criminals_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv",
         "data": csv_data,
     }

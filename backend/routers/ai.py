@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from pymongo.database import Database
 from bson.objectid import ObjectId
 from typing import Optional, Dict, Any
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 import json
 import asyncio
 from database import get_db
@@ -64,7 +64,7 @@ async def generate_briefing(db: Database = Depends(get_db)):
     try:
         # Get current crime statistics
         crime_stats = get_crime_summary(days=1)
-        crime_stats["timestamp"] = datetime.now(UTC).isoformat()
+        crime_stats["timestamp"] = datetime.now(timezone.utc).isoformat()
         
         # Generate briefing with Ollama
         generator = generate_daily_briefing(crime_stats)
@@ -372,26 +372,40 @@ async def generate_report_summary(report_data: Dict[str, Any], db: Database = De
 
 @router.get("/status")
 def get_ollama_status():
-    """Check Ollama service status"""
+    """Check LLM service status (local Ollama or hosted providers)"""
     try:
         import httpx
         import asyncio
+        import os
+        
+        has_gemini = bool(os.getenv("GEMINI_API_KEY"))
+        has_openai = bool(os.getenv("OPENAI_API_KEY"))
         
         async def check():
-            async with httpx.AsyncClient(timeout=5) as client:
+            async with httpx.AsyncClient(timeout=2) as client:
                 try:
                     response = await client.get("http://localhost:11434/api/tags")
                     return response.status_code == 200
                 except:
                     return False
         
-        loop = asyncio.new_event_loop()
-        is_running = loop.run_until_complete(check())
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+        ollama_running = loop.run_until_complete(check())
+        
+        is_running = has_gemini or has_openai or ollama_running
+        active_model = "gemini-1.5-flash" if has_gemini else ("gpt-4o-mini" if has_openai else "llama3")
+        provider = "gemini" if has_gemini else ("openai" if has_openai else ("ollama" if ollama_running else "simulated"))
         
         return {
             "ollama_running": is_running,
-            "model": "llama3",
+            "model": active_model,
             "status": "ready" if is_running else "unavailable",
+            "provider": provider,
         }
     except Exception as e:
         return {

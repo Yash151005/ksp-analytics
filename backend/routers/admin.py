@@ -5,7 +5,7 @@ Handles user management, audit logs, and system administration
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pymongo.database import Database
 from bson.objectid import ObjectId
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from database import get_db
 from models import serialize_docs, serialize_doc
@@ -26,7 +26,7 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     password: Optional[str] = None
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto")
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -136,7 +136,7 @@ def create_user(
     if user_data.role not in ROLE_PERMISSIONS:
         raise HTTPException(status_code=400, detail=f"Invalid role: {user_data.role}")
     
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     user_doc = {
         "username": user_data.username,
         "email": user_data.email,
@@ -200,7 +200,7 @@ def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    update_dict = {"updated_at": datetime.now(UTC)}
+    update_dict = {"updated_at": datetime.now(timezone.utc)}
     
     if user_data.email:
         update_dict["email"] = user_data.email
@@ -265,7 +265,7 @@ def list_audit_logs(
     db: Database = Depends(get_db),
 ):
     """List audit logs"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     filter_query = {"created_at": {"$gte": cutoff_date}}
     
@@ -304,7 +304,7 @@ def list_audit_logs(
 @router.get("/audit-logs/stats")
 def audit_stats(days: int = Query(30, ge=1, le=365), db: Database = Depends(get_db)):
     """Get audit log statistics"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     total_actions = db.audit_logs.count_documents({"created_at": {"$gte": cutoff_date}})
     
@@ -347,24 +347,37 @@ def get_system_health(db: Database = Depends(get_db)):
     except Exception as e:
         db_status = f"error: {str(e)}"
     
-    # Check Ollama
+    # Check AI availability
     try:
-        import httpx
-        import asyncio
-        
-        async def check_ollama():
-            async with httpx.AsyncClient(timeout=5) as client:
-                try:
-                    response = await client.get("http://localhost:11434/api/tags")
-                    return response.status_code == 200
-                except:
-                    return False
-        
-        loop = asyncio.new_event_loop()
-        ollama_running = loop.run_until_complete(check_ollama())
-        ollama_status = "ready" if ollama_running else "unavailable"
+        import os
+        if os.getenv("GROQ_API_KEY"):
+            ollama_status = "ready (via Groq Cloud Llama 3)"
+            ai_url = "https://api.groq.com"
+        elif os.getenv("OPENAI_API_KEY"):
+            ollama_status = "ready (via OpenAI)"
+            ai_url = "https://api.openai.com"
+        elif os.getenv("GEMINI_API_KEY"):
+            ollama_status = "ready (via Gemini)"
+            ai_url = "https://generativelanguage.googleapis.com"
+        else:
+            import httpx
+            import asyncio
+            
+            async def check_ollama():
+                async with httpx.AsyncClient(timeout=5) as client:
+                    try:
+                        response = await client.get("http://localhost:11434/api/tags")
+                        return response.status_code == 200
+                    except:
+                        return False
+            
+            loop = asyncio.new_event_loop()
+            ollama_running = loop.run_until_complete(check_ollama())
+            ollama_status = "ready (Local)" if ollama_running else "unavailable (using Simulated Fallback)"
+            ai_url = "http://localhost:11434"
     except Exception as e:
         ollama_status = f"error: {str(e)}"
+        ai_url = "unknown"
     
     # Get crime data counts
     try:
@@ -383,7 +396,7 @@ def get_system_health(db: Database = Depends(get_db)):
         "ollama": {
             "status": ollama_status,
             "model": "llama3",
-            "url": "http://localhost:11434",
+            "url": ai_url,
         },
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }

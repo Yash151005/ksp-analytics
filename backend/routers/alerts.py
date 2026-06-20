@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from pymongo.database import Database
 from bson.objectid import ObjectId
 from typing import Optional
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from database import get_db
 from models import serialize_docs, serialize_doc
 from services.export_service import export_alerts_to_csv
@@ -26,7 +26,7 @@ def list_alerts(
     db: Database = Depends(get_db),
 ):
     """List alerts with filtering and pagination"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     filter_query = {"created_at": {"$gte": cutoff_date}}
     
@@ -94,7 +94,7 @@ def acknowledge_alert(alert_id: str, db: Database = Depends(get_db)):
     except:
         raise HTTPException(status_code=400, detail="Invalid alert ID format")
         
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     result = db.alerts.update_one(
         {"_id": obj_id},
         {"$set": {"is_acknowledged": True, "updated_at": now}}
@@ -130,7 +130,7 @@ def escalate_alert(alert_id: str, db: Database = Depends(get_db)):
     except ValueError:
         current_index = 0
         
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     if current_index < len(severity_levels) - 1:
         new_severity = severity_levels[current_index + 1]
         db.alerts.update_one(
@@ -151,7 +151,7 @@ def escalate_alert(alert_id: str, db: Database = Depends(get_db)):
 @router.get("/stats/summary")
 def get_summary(db: Database = Depends(get_db)):
     """Get alert statistics"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=30)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
     
     total_alerts = db.alerts.count_documents({"created_at": {"$gte": cutoff_date}})
     
@@ -191,7 +191,7 @@ def get_summary(db: Database = Depends(get_db)):
 @router.get("/by-severity")
 def by_severity(days: int = Query(7, ge=1, le=90), db: Database = Depends(get_db)):
     """Get alert breakdown by severity"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     pipeline = [
         {"$match": {"created_at": {"$gte": cutoff_date}}},
@@ -236,7 +236,7 @@ def export_csv(
     db: Database = Depends(get_db),
 ):
     """Export alerts to CSV"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     filter_query = {"created_at": {"$gte": cutoff_date}}
     
@@ -260,6 +260,6 @@ def export_csv(
     csv_data = export_alerts_to_csv(alert_dicts)
     
     return {
-        "filename": f"alerts_export_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.csv",
+        "filename": f"alerts_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv",
         "data": csv_data,
     }

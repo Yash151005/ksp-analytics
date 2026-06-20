@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 import random
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -9,7 +9,7 @@ db = client.ksp_analytics
 db.crimes.delete_many({"description": "Anomaly generated crime"})
 
 # Add 30 crimes exactly 5 days ago
-anomaly_date = datetime.now(UTC) - timedelta(days=5)
+anomaly_date = datetime.now(timezone.utc) - timedelta(days=5)
 day_str = anomaly_date.strftime("%A").lower()
 
 crimes_to_add = []
@@ -31,8 +31,8 @@ for i in range(30):
         "time": time_str,
         "day_of_week": day_str,
         "description": "Anomaly generated crime",
-        "created_at": datetime.now(UTC),
-        "updated_at": datetime.now(UTC)
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
     })
 
 db.crimes.insert_many(crimes_to_add)

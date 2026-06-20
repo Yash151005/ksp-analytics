@@ -2,18 +2,22 @@
 Analytics service for KSP Analytics Platform MongoDB
 Handles data analysis, aggregations, and statistics
 """
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Tuple, Any
-from database import db_instance
+from database import get_db_instance
 
-db = db_instance
+class DatabaseProxy:
+    def __getattr__(self, name):
+        return getattr(get_db_instance(), name)
+
+db = DatabaseProxy()
 
 
 def get_crime_summary(days: int = 30) -> Dict[str, Any]:
     """
     Get summary statistics for crimes in the last N days
     """
-    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     total_crimes = db.crimes.count_documents({"date": {"$gte": cutoff_date}})
     
@@ -50,7 +54,7 @@ def get_crime_summary(days: int = 30) -> Dict[str, Any]:
 
 def get_district_stats(days: int = 30) -> Dict[str, int]:
     """Get crime counts by district"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
     
     pipeline = [
         {"$match": {"date": {"$gte": cutoff_date}}},
@@ -63,7 +67,7 @@ def get_district_stats(days: int = 30) -> Dict[str, int]:
 
 def get_crime_trend(months: int = 12) -> List[Dict[str, Any]]:
     """Get crime trends by month"""
-    cutoff_date = datetime.now(UTC) - timedelta(days=30 * months)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=30 * months)
     
     crimes = list(db.crimes.find({"date": {"$gte": cutoff_date}}))
     
@@ -174,7 +178,7 @@ def get_anomalies(sensitivity: float = 2.0) -> List[Dict[str, Any]]:
     Uses simple standard deviation approach
     """
     # Get daily crime counts for last 90 days
-    cutoff_date = datetime.now(UTC) - timedelta(days=90)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=90)
     
     crimes = list(db.crimes.find({"date": {"$gte": cutoff_date}}))
     
@@ -240,7 +244,7 @@ def get_repeat_offenders(min_crimes: int = 3) -> List[Dict[str, Any]]:
 def get_risk_scores_by_district() -> List[Dict[str, Any]]:
     """Calculate risk scores for each district"""
     # Get crime data by district for last 30 days
-    cutoff_date = datetime.now(UTC) - timedelta(days=30)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
     
     pipeline = [
         {"$match": {"date": {"$gte": cutoff_date}}},

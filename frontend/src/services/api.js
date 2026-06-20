@@ -1,10 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error('VITE_API_URL is not defined');
-}
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -32,7 +28,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = '/app/login';
     }
     return Promise.reject(error);
   }
@@ -47,7 +43,7 @@ export const authAPI = {
 
 export const crimesAPI = {
   list: (params) => 
-    api.get('/crimes', { params }),
+    api.get('/crimes/', { params }),
   get: (id) => 
     api.get(`/crimes/${id}`),
   getSummary: (days) => 
@@ -66,7 +62,7 @@ export const crimesAPI = {
 
 export const criminalsAPI = {
   list: (params) => 
-    api.get('/criminals', { params }),
+    api.get('/criminals/', { params }),
   get: (id) => 
     api.get(`/criminals/${id}`),
   getAssociates: (id) => 
@@ -100,7 +96,7 @@ export const analyticsAPI = {
 
 export const alertsAPI = {
   list: (params) => 
-    api.get('/alerts', { params }),
+    api.get('/alerts/', { params }),
   get: (id) => 
     api.get(`/alerts/${id}`),
   acknowledge: (id) => 
@@ -119,7 +115,7 @@ export const alertsAPI = {
 
 export const reportsAPI = {
   list: (params) => 
-    api.get('/reports', { params }),
+    api.get('/reports/', { params }),
   get: (id) => 
     api.get(`/reports/${id}`),
   update: (id, data) => 

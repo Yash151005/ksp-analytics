@@ -1,12 +1,12 @@
 from pymongo import MongoClient
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 import random
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client.ksp_analytics
 
 # Add 30 crimes exactly 5 days ago to create a massive anomaly
-anomaly_date = datetime.now(UTC) - timedelta(days=5)
+anomaly_date = datetime.now(timezone.utc) - timedelta(days=5)
 
 crimes_to_add = []
 for i in range(30):
@@ -21,8 +21,8 @@ for i in range(30):
         "longitude": 77.5946 + random.uniform(-0.01, 0.01),
         "date": anomaly_date,
         "description": "Anomaly generated crime",
-        "created_at": datetime.now(UTC),
-        "updated_at": datetime.now(UTC)
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
     })
 
 db.crimes.insert_many(crimes_to_add)

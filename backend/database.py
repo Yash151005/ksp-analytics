@@ -3,19 +3,49 @@ Database configuration and setup for KSP Analytics Platform
 """
 from pymongo import MongoClient
 import os
+from dotenv import load_dotenv
 
-# MongoDB Connection
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+# Load environment variables
+load_dotenv()
 
-client = MongoClient(MONGO_URI)
-db_instance = client.ksp_analytics
+def get_mongo_uri():
+    return os.getenv("MONGO_URI", "mongodb+srv://codebidteam102_db_user:12345@cluster0.oyl9icq.mongodb.net/?appName=Cluster0")
+
+client = None
+db_instance = None
+
+def init_client():
+    global client, db_instance
+    if client is not None:
+        return client
+        
+    try:
+        uri = get_mongo_uri()
+        if not uri.startswith(("mongodb://", "mongodb+srv://")):
+            uri = "mongodb+srv://" + uri
+        # Instantiate without blocking if possible
+        client = MongoClient(uri, serverSelectionTimeoutMS=3000, connect=False)
+    except Exception as e:
+        print(f"Warning: Invalid MONGO_URI. Using fallback. Error: {e}")
+        client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=3000, connect=False)
+        
+    db_instance = client.ksp_analytics
+    return client
 
 def get_db():
     """Dependency for getting DB session in FastAPI routes"""
+    init_client()
     yield db_instance
+
+def get_db_instance():
+    init_client()
+    return db_instance
 
 def init_db():
     """Initialize database indexes"""
+    init_client()
+    # Ping first to fail fast if no DB is available
+    client.admin.command('ping')
     # Create required indexes
     db_instance.users.create_index("username", unique=True)
     db_instance.users.create_index("email", unique=True)

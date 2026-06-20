@@ -3,15 +3,18 @@ Seed data generator for KSP Analytics Platform
 Creates realistic crime records across Karnataka in MongoDB
 """
 import random
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from bson.objectid import ObjectId
 
-from database import db_instance, init_db
+from database import get_db_instance, init_db
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+class DatabaseProxy:
+    def __getattr__(self, name):
+        return getattr(get_db_instance(), name)
 
-db = db_instance
+db = DatabaseProxy()
+pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto")
 
 # Karnataka Districts with coordinates (lat, lng)
 DISTRICTS = {
@@ -132,7 +135,7 @@ def generate_crime_id():
 
 def create_default_users():
     """Create default demo users"""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     users = [
         {
             "username": "admin",
@@ -172,7 +175,7 @@ def create_default_users():
 def create_criminals(count=100):
     """Generate criminal records with network connections"""
     criminals = []
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     
     for i in range(count):
         first_name = random.choice(FIRST_NAMES)
@@ -223,7 +226,7 @@ def create_crimes(criminals, count=600):
     """Generate crime records with victims"""
     crimes = []
     crime_ids_set = set()
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     
     for i in range(count):
         while True:
@@ -240,7 +243,7 @@ def create_crimes(criminals, count=600):
         lat, lng = get_random_coordinates(district)
         
         days_ago = random.randint(0, 365 * 3)
-        crime_date = datetime.now(UTC) - timedelta(days=days_ago)
+        crime_date = datetime.now(timezone.utc) - timedelta(days=days_ago)
         
         # Create victims
         victims = []
@@ -283,7 +286,7 @@ def create_crimes(criminals, count=600):
 def create_alerts(crimes, count=50):
     """Generate alert records"""
     alerts = []
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     
     for i in range(count):
         crime = random.choice(crimes)
@@ -310,7 +313,7 @@ def create_alerts(crimes, count=50):
 def create_reports(count=15):
     """Generate dummy reports"""
     reports = []
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     report_types = ["daily", "weekly", "monthly", "custom"]
     
     for i in range(count):
@@ -341,7 +344,7 @@ def create_reports(count=15):
 def create_audit_logs(count=50):
     """Generate dummy audit logs"""
     logs = []
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     actions = ["LOGIN", "VIEW_REPORT", "GENERATE_REPORT", "UPDATE_ALERT", "CREATE_USER", "EXPORT_DATA"]
     resources = ["System", "Report", "Alert", "User", "CrimeData"]
     
@@ -364,7 +367,7 @@ def create_audit_logs(count=50):
 def create_vehicles(criminals, count=80):
     """Generate vehicle records"""
     vehicles = []
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     for _ in range(count):
         criminal = random.choice(criminals)
         vehicles.append({
@@ -382,7 +385,7 @@ def create_vehicles(criminals, count=80):
 def create_bank_accounts(criminals, count=60):
     """Generate bank account records"""
     accounts = []
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     for _ in range(count):
         criminal = random.choice(criminals)
         accounts.append({

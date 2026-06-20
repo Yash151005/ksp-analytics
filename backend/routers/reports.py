@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from pymongo.database import Database
 from bson.objectid import ObjectId
 from typing import List, Optional
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from database import get_db
 from models import serialize_docs, serialize_doc
 from services.export_service import (
@@ -118,12 +118,12 @@ def generate_report(
         if req.date_from:
             from_date = datetime.fromisoformat(req.date_from)
         else:
-            from_date = datetime.now(UTC) - timedelta(days=30)
+            from_date = datetime.now(timezone.utc) - timedelta(days=30)
         
         if req.date_to:
             to_date = datetime.fromisoformat(req.date_to)
         else:
-            to_date = datetime.now(UTC)
+            to_date = datetime.now(timezone.utc)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid date format: {e}")
     
@@ -165,7 +165,7 @@ def generate_report(
         metrics["avg_clearance_rate"] = round((closed / len(crimes) * 100), 2)
     
     # Create report
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     report_doc = {
         "title": req.title,
         "report_type": req.report_type,
@@ -348,7 +348,7 @@ def export_report(
     date_range = f"{d_from} to {d_to}"
     
     title_safe = report.get("title", "Report").replace(" ", "_")
-    timestamp = datetime.now(UTC).strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
     
     if format == "pdf":
         pdf_bytes = export_report_to_pdf(
@@ -399,12 +399,12 @@ def get_report_snapshot(
     if date_from:
         from_date = datetime.fromisoformat(date_from)
     else:
-        from_date = datetime.now(UTC) - timedelta(days=30)
+        from_date = datetime.now(timezone.utc) - timedelta(days=30)
     
     if date_to:
         to_date = datetime.fromisoformat(date_to)
     else:
-        to_date = datetime.now(UTC)
+        to_date = datetime.now(timezone.utc)
     
     days = (to_date - from_date).days
     if days < 1:
