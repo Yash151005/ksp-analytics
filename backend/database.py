@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_mongo_uri():
-    return os.getenv("MONGO_URI", "mongodb+srv://codebidteam102_db_user:12345@cluster0.oyl9icq.mongodb.net/?appName=Cluster0")
+    return os.getenv("MONGO_URI", "")
 
 client = None
 db_instance = None
