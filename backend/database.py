@@ -27,7 +27,7 @@ def init_client():
         client = MongoClient(uri, serverSelectionTimeoutMS=3000, connect=False)
     except Exception as e:
         print(f"Warning: Invalid MONGO_URI. Using fallback. Error: {e}")
-        client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=3000, connect=False)
+        client = MongoClient("mongodb:///", serverSelectionTimeoutMS=3000, connect=False)
         
     db_instance = client.ksp_analytics
     return client
